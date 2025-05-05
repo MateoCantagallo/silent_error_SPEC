@@ -31,7 +31,8 @@
 
 
 \section{Introduction}
-\IEEEPARstart{A}{s} High Performance Computing workloads continue to grow into the exascale realm, and as hardware scales to match it, some old challenges become ever more important to resolve. One of said challenges is the appearance of radiation induced bit flips inside computational units. Sometimes, either due to cosmic rays or passive radiation from packaging materials, a bit inside the state of a chip can flip and then end up as a noticeable change in the architectural state of the execution. The impact on the execution state is normally separated in three major categories:
+\IEEEPARstart{A}{s} High Performance Computing workloads continue to grow into the exascale realm, and as hardware scales to match it, some old challenges become ever more important to resolve. One of said challenges is the appearance of radiation induced bit flips inside computational units. Sometimes, either due to cosmic rays or passive radiation from packaging materials, a bit inside the state of a chip can flip and then end up as a noticeable change in the architectural state of the execution.\cite{dodd2003basic,doi:10.1126/science.206.4420.776} The scale of modern HPC systems increases the likelihood of these events to a point at which they need to be dealt with in a proactive manner.\cite{geist2016supercomputing,snir2014addressing,dongarra2015fault} \\
+The impact on the execution state is normally separated in three major categories:\cite{avizienis2004basic}
 \begin{itemize}
     \item None: The fault did not result in a noticeable change in
 the execution state and the program finished as if no fault
@@ -46,11 +47,11 @@ returned
 \end{itemize}
 
 In this paper we will focus on SDCs. While crashes can be expensive to recover from, they are always caught. SDCs introduce a constant doubt upon the results obtained, and considering many HPC applications are in the scientific domain (where high precision is required and where an easy method to check results is not always available) confidence in the outputs is paramount.\\
-Most fault tolerance in HPC executions is done through software methods like checkpoint-recovery. These methods are increasingly sensitive to the ever growing scale of HPC applications. Therefore, there has been a substantial push to protection methods at the hardware level in order to mitigate the increasing cost of check pointing.  \\
+Most fault tolerance in HPC executions is done through software methods like checkpoint-recovery. \cite{snir2014addressing}These methods are increasingly sensitive to the ever growing scale of HPC applications. Therefore, there has been a substantial push to protection methods at the hardware level in order to mitigate the increasing cost of check pointing.  \\
 The ephemeral nature of transient faults presents a significant challenge in designing protection methods at the hardware level to shield against them. Since they only exist during the execution of an instruction, the only way to catch a fault is by introducing redundancy at the instruction level. This can be achieved either with spatial redundancy (duplicating the functional units) or temporal redundancy (duplicating the instructions). In both cases, if every instruction is to be protected, the naive approach entails a two times performance penalty, something that is prohibitively expensive in high performance domains. \\
-Transient faults in HPC systems present a growing concern that requires attention, but that also can not be implemented unless efficient enough methods are developed.
-Previous work focused on providing novel solution that leverage different replication spheres and the use of underutilized functional units to reduce this performance overhead. Most of the approaches proposed focus on reducing overheads as much as possible while still covering the largest amount of instructions under the sphere of replication as possible. \\
-What we propose is to introduce a more fine grain view into the instructions that should be protected. By analyzing the behavior of applications from the SPEC 2017 HPC Benchsuite we aim to reduce protection overheads by finding which instructions at the architectural level are more sensitive to bit flips in their execution and focusing protection efforts only on those, thus maximizing the detection of faults that would have caused an SDC while minimizing the total amount of instruction protected. Through our fault injection campaign we focused on finding a "critical" subset of instruction that, if protected, would catch most faults that would have resulted in an SDC while still keeping most instruction outside of the protection sphere.\\
+Transient faults in HPC systems present a growing concern that requires attention, but that also can not be realistically dealt with unless efficient enough methods are developed.
+Previous work focused on providing novel solution that leverage different replication spheres and the use of underutilized functional units to reduce this performance overhead. Most of the approaches proposed focus on reducing overheads as much as possible while still covering the largest amount of instructions under the sphere of replication. \\
+What we propose is to introduce a fine grain view into the instructions that should be protected. By analyzing the behavior of applications from the SPEC 2017 HPC Benchsuite we aim to reduce protection overheads by finding which instructions at the architectural level are more sensitive to bit flips in their execution and focusing protection efforts only on those, thus maximizing the detection of faults that would have caused an SDC while minimizing the total amount of instruction protected. Through our fault injection campaign we focused on finding a "critical" subset of instruction that, if protected, would catch most faults that would have resulted in an SDC while still keeping most instruction outside of the protection sphere.\\
 In this paper we conducted an extensive injection campaign to all applications from the SPEC2017 FP rate Benchsuite and compared the sensitivity each application had to transient faults and also within each application what categories of instruction showed the most SDC. Based on the results, we show that any protection methods that tries to minimize overheads needs to take into account the behavior of the programs that will run on that hardware as any agnostic approach will entail high amounts of unnecessary protection.
 
 
@@ -59,15 +60,25 @@ As previously mentioned, we aim to focus on SDCs. Following this decision we fur
 FP instructions are crucial in high precision scientific applications, consisting of the bulk of operations that calculate the relevant results. Furthermore, FP instructions are not used for pointer manipulation or control flow instructions, so it is highly unlikely that an error in this unit results in a crash rather than an SDC (We later confirmed this by observing no segmentation faults in any of our experiments).
 Another motivating factor for this focus on FP instructions is that the high complexity and area of FP units means that there is a further cost in either replicating the units or replicating the instructions, so any strides in reducing the amount of FP instructions that need to be protected would save substantial performance cost.
 We chose to perform our campaign over SPEC as it is consider one of the main standards within the HPC community and the applications provided by it give a varied selection of different program domains.\\
-We conducted our injection campaign we the goal of answering these three main questions:
+We conducted our injection campaign with the goal of answering these three main questions:
 \begin{itemize}
     \item Is there evidence that a "critical" subset of instructions that are significantly more sensitive to bit flips than others, and is this subset a minority?
     \item Do these critical instructions share visible characteristics that can be observed at the architectural level?
     \item Do these subsets vary depending on the application or type of application?
 \end{itemize}
 
-
-
+\section{Methodology}
+Since our goal is to reach a conclusion in regards to the instructions that should or should not be replicated, we decided to conduct our fault injection at the architectural level using intel PIN tool.\cite{luk2005pin}. PIN is an instrumentation tool developed by intel for x86 architecture CPUs that allows for runtime instrumentation of programs. Similar approaches have been previously used for fault injection.\cite{wei2014quantifying}\\
+Injection faults at the instruction level may introduce a degree of inaccuracy in comparison with actual real life faults that can manifest at any point of the microarchitecture, as discussed in \cite{cho2013quantitative}. For our purposes we do not believe that these inaccuracies are relevant because our work focuses solely on how faults in specific instructions affect program output, so faults that would not have affected any instructions are of no interest. Furthermore, instrumentation with PIN provides a relatively fast injection metholodogy, allowing for a substancial number of faults to be placed in each program.\\
+Our tool works by:
+\begin{itemize}
+    \item Running the program until a specific instruction
+    \item Taking control of the execution, reading the write register of the original instruction that had just finished executing and flipping a single bit of that value.
+    \item Store the new value in the same register an returns the execution to the original program.
+\end{itemize} 
+Instructions instrumented are only Floating point arithmetic instructions inside the main executable.
+\bibliographystyle{IEEEtran}
+\bibliography{citations}
 
 \end{document}
 
