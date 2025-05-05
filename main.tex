@@ -8,6 +8,8 @@
 \usepackage{url}
 \usepackage{verbatim}
 \usepackage{graphicx}
+\usepackage{svg}
+
 \hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -69,14 +71,38 @@ We conducted our injection campaign with the goal of answering these three main 
 
 \section{Methodology}
 Since our goal is to reach a conclusion in regards to the instructions that should or should not be replicated, we decided to conduct our fault injection at the architectural level using intel PIN tool.\cite{luk2005pin}. PIN is an instrumentation tool developed by intel for x86 architecture CPUs that allows for runtime instrumentation of programs. Similar approaches have been previously used for fault injection.\cite{wei2014quantifying}\\
-Injection faults at the instruction level may introduce a degree of inaccuracy in comparison with actual real life faults that can manifest at any point of the microarchitecture, as discussed in \cite{cho2013quantitative}. For our purposes we do not believe that these inaccuracies are relevant because our work focuses solely on how faults in specific instructions affect program output, so faults that would not have affected any instructions are of no interest. Furthermore, instrumentation with PIN provides a relatively fast injection metholodogy, allowing for a substancial number of faults to be placed in each program.\\
+Injecting faults at the instruction level may introduce a degree of inaccuracy in comparison with actual real life faults that can manifest at any point of the microarchitecture, as discussed in \cite{cho2013quantitative}. For our purposes we do not believe that these inaccuracies are relevant because our work focuses solely on how faults in specific instructions affect program output, so faults that would not have affected any instructions are of no interest. Furthermore, instrumentation with PIN provides a relatively fast injection metholodogy, allowing for a substantial number of faults to be placed in each program.\\
 Our tool works by:
 \begin{itemize}
-    \item Running the program until a specific instruction
+    \item Running a program until a specific instruction.
     \item Taking control of the execution, reading the write register of the original instruction that had just finished executing and flipping a single bit of that value.
-    \item Store the new value in the same register an returns the execution to the original program.
+    \item Storing the new value in the same register and returning the execution to the original program.
 \end{itemize} 
-Instructions instrumented are only Floating point arithmetic instructions inside the main executable.
+An example of the tool on a program can be seen in fig\\
+Once execution is returned with the altered state, we observe and log the output of the program. We then observe the final behavior and log it as one of three categories:
+\begin{itemize}
+    \item No Issue: The program finished correctly and the output matches what was expected.
+    \item Crashes(PLACEHOLDER NAME): The program did not finish execution as some type of sanity check caught the altered state.
+    \item SDC: The program finished its execution but the output did not match the expected reference.
+\end{itemize}
+The two main categories that will be discussed in depth will be No Issues and SDCs, as Crashes are only observed in application that implemented sanity checks in their code. In applications without them, relevant errors in floating point instructions only resulted in SDCs.
+Instructions instrumented are only Floating point arithmetic instructions inside the main executable. These instrumentation was done over two campaigns. The first focus on getting a rough view and justification for further experiments. Here we instrumented the first thousand instructions in the main executable of a subset of the FP rate benchsuite, for each instruction we flipped bits 0, 16, 28 and 48. After promising results we went forward with a complete campaign of all applications in the suite. Here we instrumented the first 2000 instructions in each program. This number was chosen because it covered all floating point instructions in most benchmarks while still being a reasonable cutting point for those with more. The bits flipped in this campaign were the 6,8,10,12,14,16,24,32,40,42,44,46,48,51. These bits were chosen to cover the full range inside the register while providing more granularity at the edges in order to find the exact edges at which bit flips start and stop being relevant.
+\section{Experimental Setup}
+All programs instrumented were compiled with O3 gcc in single threaded mode, using SPEC2017 default parameters. They were run on a AMD Ryzen 3 3200U CPU. All instrumented benchmarks input parameters were those of the SPEC provided control examples. 
+
+\section{Results}
+The first set of exploratory results provided are seen in the following figures.
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=3in]{plots/general_view/general_summary.pdf}
+  \caption{Fig.1: Absolute count of observed behavior from all fault injected in first injection campaign.}
+  \label{totals}
+\end{figure}
+
+Figure \ref{totals} shows us the general results from the first campaign. When looking at the totality of faults injected we clearly see that a vast majority of them do not result in any impact on the normal execution of the program, even when exclusively injecting faults directly into the results of instructions. Only around ten percent of all faults injected had an impact on the final output of the program. Meanwhile an even smaller amount where caught by sanity checks present in the namd benchmark. This result alone already presents a very strong indication that any protection methodology that attempts to protect every single instruction will inevitably spend most its resources catching faults that would not have had an impact on the behavior of the program.\\
+
+
 \bibliographystyle{IEEEtran}
 \bibliography{citations}
 
