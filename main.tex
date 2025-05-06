@@ -9,7 +9,8 @@
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{svg}
-
+\usepackage{subfigure}
+\usepackage{subcaption}
 \hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -96,12 +97,22 @@ The first set of exploratory results provided are seen in the following figures.
 \begin{figure}[!t]
   \centering
   \includegraphics[width=3in]{plots/general_view/general_summary.pdf}
-  \caption{Fig.1: Absolute count of observed behavior from all fault injected in first injection campaign.}
+  \caption{Absolute count of observed behavior from all fault injected in first injection campaign.}
   \label{totals}
 \end{figure}
 
 Figure \ref{totals} shows us the general results from the first campaign. When looking at the totality of faults injected we clearly see that a vast majority of them do not result in any impact on the normal execution of the program, even when exclusively injecting faults directly into the results of instructions. Only around ten percent of all faults injected had an impact on the final output of the program. Meanwhile an even smaller amount where caught by sanity checks present in the namd benchmark. This result alone already presents a very strong indication that any protection methodology that attempts to protect every single instruction will inevitably spend most its resources catching faults that would not have had an impact on the behavior of the program.\\
+%ARREGLAR ALINEAMIENTO
+\begin{figure}[!t] 
+    \centering
+    \subfloat[nab]{\includegraphics[width=2in]{plots/stacked_distribution/nab_r_stacked_distribution.pdf}}
+    \subfloat[namd]{\includegraphics[width=2in]{plots/stacked_distribution/namd_r_stacked_distribution.pdf}}
+    \subfloat[wrf]{\includegraphics[width=2in]{plots/stacked_distribution/wrf_r_stacked_distribution.pdf}}
+\caption{Normalized counts of observed behavior after flipping each respective bit.}
+\label{perbits}
+\end{figure}
 
+We can go further into the analysis of this first injection campaign. In figure \ref{perbits} we see a breakdown of the results according to the specific bit flipped, here as an example we are showing the plots for the nab and namd benchmarks respectively. With this view some familiar patterns start to emerge. Nab shows the expected behavior one would imagine according to previous literature. As we increase the significance of the bit affected, the amount of runs that result in a visible mismatch in the output increase drastically, observing none on bits 0 and 16, very few at bit 28, and by flipping bit 48 most runs end in an SDC. All other programs instrumented on this campaign showed similar behavior to nab,some showing more sensitivity in the least significant bits, all except wrf and namd. Wrf and namd experience a peak of SDCs in the middle bits, falling of by the most significant. This clashes with the assumed notion that flips in the most significant bits are always the ones that lead to the most SDCs. The specific behavior of every application will be discussed in depth in section  . This plots further give us evidence for the need of granularity if we are to achieve maximum efficiency in protection. Not are faults in most instructions not directly conducive to SDCs, but even inside the result register there are clear differences in priority between bits, which are dependent on the nature of the program currently running. If all bits are protected and if the same strategy is used for all programs, we would be wasting the majority of resources in the protection of non-critical data.
 
 \bibliographystyle{IEEEtran}
 \bibliography{citations}
