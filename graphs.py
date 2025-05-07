@@ -521,7 +521,7 @@ def main():
     
     colors = {'No Issues': '#b2d8d8', 'Crashed': '#008080', 'SDC': '#004c4c'}
     org_benchmarks = ["namd_r","nab_r","lbm_r","roms_r","wrf_r"]
-    benchmarks = ["namd_r","nab_r","lbm_r","roms_r","wrf_r","povray_r","imagik_r","fotonik3d_r"]
+    benchmarks = ["namd_r","nab_r","lbm_r","roms_r","wrf_r"]
     plot_sdc_percentage_by_bit(df_sweeps, benchmarks)
     plot_avg_sdc_per_category_by_benchmark(df_sweeps, benchmarks)
     plot_avg_sdc_per_simd_by_benchmark(df_sweeps, benchmarks)

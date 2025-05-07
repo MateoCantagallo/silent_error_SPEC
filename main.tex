@@ -92,6 +92,7 @@ Instructions instrumented are only Floating point arithmetic instructions inside
 All programs instrumented were compiled with O3 gcc in single threaded mode, using SPEC2017 default parameters. They were run on a AMD Ryzen 3 3200U CPU. All instrumented benchmarks input parameters were those of the SPEC provided control examples. 
 
 \section{Results}
+\subsection{Initial campaign}
 The first set of exploratory results provided are seen in the following figures.
 
 \begin{figure}[!t]
@@ -105,27 +106,75 @@ Figure \ref{totals} shows us the general results from the first campaign. When l
 %ARREGLAR ALINEAMIENTO
 \begin{figure}[!t] 
     \centering
-    \subfloat[nab]{\includegraphics[width=2in]{plots/stacked_distribution/nab_r_stacked_distribution.pdf}}
-    \subfloat[namd]{\includegraphics[width=2in]{plots/stacked_distribution/namd_r_stacked_distribution.pdf}}
-    \subfloat[wrf]{\includegraphics[width=2in]{plots/stacked_distribution/wrf_r_stacked_distribution.pdf}}
+    \subfloat[nab]{\includegraphics[width=45mm]{plots/stacked_distribution/nab_r_stacked_distribution.pdf}}
+    \subfloat[namd]{\includegraphics[width=45mm]{plots/stacked_distribution/namd_r_stacked_distribution.pdf}}
+    \hspace{0mm}
+    \subfloat[wrf]{\includegraphics[width=45mm]{plots/stacked_distribution/wrf_r_stacked_distribution.pdf}}
 \caption{Normalized counts of observed behavior after flipping each respective bit.}
 \label{perbits}
 \end{figure}
 
 We can go further into the analysis of this first injection campaign. In figure \ref{perbits} we see a breakdown of the results according to the specific bit flipped, here as an example we are showing the plots for the nab and namd benchmarks respectively. With this view some familiar patterns start to emerge. Nab shows the expected behavior one would imagine according to previous literature. As we increase the significance of the bit affected, the amount of runs that result in a visible mismatch in the output increase drastically, observing none on bits 0 and 16, very few at bit 28, and by flipping bit 48 most runs end in an SDC. All other programs instrumented on this campaign showed similar behavior to nab,some showing more sensitivity in the least significant bits, all except wrf and namd. Wrf and namd experience a peak of SDCs in the middle bits, falling of by the most significant. This clashes with the assumed notion that flips in the most significant bits are always the ones that lead to the most SDCs. The specific behavior of every application will be discussed in depth in section  . This plots further give us evidence for the need of granularity if we are to achieve maximum efficiency in protection. Not are faults in most instructions not directly conducive to SDCs, but even inside the result register there are clear differences in priority between bits, which are dependent on the nature of the program currently running. If all bits are protected and if the same strategy is used for all programs, we would be wasting the majority of resources in the protection of non-critical data.\\
 
-Looking further into the data we can separate the observed results groups given by the type of instruction instrumented. Said categories would be ADD, SUB, MUL and DIV instructions. By making this distinction we hoped to see some clear difference in behavior. Having distinctions in criticality between these categories would not only show evidence of our coveted "critical" subsection, but also by being such simple distinctions to make, it would provide evidence that this subsection may be feasible to make out in real time. Figure shows as several things in this regard. First is important to see the clear difference in general sensitivity that different programs carry. Benchmarks likke roms and lbm have SDC rates that at maximum do not exceed ten percent, meanwhile benchmarks like wrf's SDC rates skyrocket to almost 35\% of runs in the case of ADD instructions. This tells us that applications like lbm may benefit from a more lenient protection strategy as it has the certainty that most faults will not end in an error, meanwhile hardware running wrf should have a conservative strategy since any fault that is not caught has a higher chance to result in SDC.\\
+Looking further into the data we can separate the observed results groups given by the type of instruction instrumented. Said categories would be ADD, SUB, MUL and DIV instructions. By making this distinction we hoped to see some clear difference in behavior. Having distinctions in criticality between these categories would not only show evidence of our coveted "critical" subsection, but also by being such simple distinctions to make, it would provide evidence that this subsection may be feasible to make out in real time. Figure \ref{categories} shows us several things in this regard. First is important to see the clear difference in general sensitivity that different programs carry. Benchmarks like roms and lbm have SDC rates that at maximum do not exceed ten percent, meanwhile benchmarks like wrf's SDC rates skyrocket to almost 35\% of runs in the case of ADD instructions. This tells us that applications like lbm may benefit from a more lenient protection strategy as it has the certainty that most faults will not end in an error, meanwhile hardware running wrf should have a conservative strategy since any fault that is not caught has a higher chance to result in SDC.\\
 \begin{figure}[!t] 
     \centering
-    \subfloat[nab]{\includegraphics[width=1in]{plots/arithmetic/nab_r_arithmetic_type.pdf}}
-    \subfloat[namd]{\includegraphics[width=1in]{plots/arithmetic/namd_r_arithmetic_type.pdf}}
-    \subfloat[wrf]{\includegraphics[width=1in]{plots/arithmetic/wrf_r_arithmetic_type.pdf}}
-    \subfloat[lbm]{\includegraphics[width=1in]{plots/arithmetic/lbm_r_arithmetic_type.pdf}}
+    \subfloat[nab]{\includegraphics[width=45mm]{plots/arithmetic/nab_r_arithmetic_type.pdf}}
+    \subfloat[namd]{\includegraphics[width=45mm]{plots/arithmetic/namd_r_arithmetic_type.pdf}}
+    \hspace{0mm}
+    \subfloat[wrf]{\includegraphics[width=45mm]{plots/arithmetic/wrf_r_arithmetic_type.pdf}}
+    \subfloat[lbm]{\includegraphics[width=45mm]{plots/arithmetic/lbm_r_arithmetic_type.pdf}}
 \caption{Normalized counts of observed behavior after flipping each respective bit.}
 \label{categories}
 \end{figure}
 Not only are there differences in the general amount of SDCs, but also we see differences in the distribution of SDCs. Nab has a fairly even distribution between its categories, having a slightly higher sensitivity in DIV instruction. Lbm on the other hand has almost all its SDC coming only from ADD instructions. Already we see a very rough possible candidate for a critical subsection to focus on protection, ADD uinstructions inside lbm, accounting for almost all relevant faults.\\
-Spured by this promising reduced experiments, we continued with a more in depth injection campaign on all of SPEC.
+Spured by this promising reduced campaign, we continued with a more in depth injection campaign on all of SPEC.
+
+\subsection{Full sweep campaign}
+We now show the results obtained in the second injection campaign, as discussed in section III.
+\begin{figure}[!t] 
+    \centering
+    \includegraphics[width=8cm]{plots/sdc_percentage_by_bit.pdf}
+\caption{Percentage of runs that resulted in SDC per bit flip, from a subset of SPEC applications.}
+\label{general}
+\end{figure}
+From figure \label{general} we can see a much more detailed view of the data shown in figure \ref{perbits}. To start, we see much more clearly the difference in patterns intrinsic to each program. By adding more granularity in the bits instrumented we observe how the sensitivity of each program not only varies in intensity, but also in bit ranges. Wrf has a level of sensitivity in its least relevant bits that now other program experiences. Furthermore, all programs increase their amount of SDCs as the significance of the bits, which tracks with what would be expected, but wrf and namd, show clear peaks in the middle bits. \\
+As we did beforehand, we can separate the SDC rates insde each benchmark by the category the instruction instrumented belonged to.
+\begin{figure}[!t] 
+    \centering
+    \subfloat[nab]{\includegraphics[width=40mm]{plots/percentages_arithmetic/nab_r_sdc_arithmetic.pdf}}
+    \subfloat[lbm]{\includegraphics[width=40mm]{plots/percentages_arithmetic/lbm_r_sdc_arithmetic.pdf}}
+    \hspace{0mm}
+    \subfloat[wrf]{\includegraphics[width=40mm]{plots/percentages_arithmetic/wrf_r_sdc_arithmetic.pdf}}
+    \subfloat[roms]{\includegraphics[width=40mm]{plots/percentages_arithmetic/roms_r_sdc_arithmetic.pdf}}
+    \hspace{0mm}
+    \subfloat[namd]{\includegraphics[width=40mm]{plots/percentages_arithmetic/namd_r_sdc_arithmetic.pdf}}
+\caption{Percentages }
+\label{percategoryfull}
+\end{figure}
+By increasing the number of samples taken we can more clearly see the difference in patterns between categories inside each application. Figure \ref{percategoryfull} provides insight into the this variying behaviors. Of special interest we would like to note nab and lbm, where a clear categories experiences higher sensitivities than all others over the course of the entire range of bits. Meanwhie, namd has three distinct ranges where a different category is most sensitive. Across the least significant bits, ADD instructions are the most sensitive; then there is a peak from SUB instructions around the bit 32; and finally at the tail end of bits MUL instructions account for most SDCs.\\
+While the the graphs helps us visualize the fact that diferent patterns exist they do not provide a clear and direct comparison between both categories within a benchmark and the benchmarks themselves. Therefore, in figure \ref{average} we plot the average values of each category. This averages were calculated assuming uniformity in the distrbution of faults throught the bits of an operation. These averages are the expected value of the amount of faults that would result in an error if said faults occur in an instruction of a category.
+\begin{figure}[!t] 
+    \centering
+    \includegraphics[width=8cm]{plots/average_arithmetic/benchmarks_grouped_by_category.pdf}
+\caption{Average amount of faults that resulted in an SDC per category.}
+\label{average}
+\end{figure}
+This plot paints a clear picture of every finding discussed at this point and this average vaue could be considered a possible candidate for a sort of "Criticality metric" that would allow a user to fine tune their protection strategy. Still, we need to consider that the original goal was to find a critical subset if instructions with the specific purpose of reducing the number of instructions protected. This plot shows the general sensitivity of every category but its says nothing about the cost of choosing one of the categories. As an example, if we only look in figure \ref{average} at lbm, the ADD instructions could be considered for exclusive protection. What the plot does not show is that ADD instructions in lbm account for 90\% of the total instructions instrumented, so the strategy would not deviate much from one which protects all instructions. \\
+To account for the possible cost of protecting each category we proposed the very simple inclusion of weighing each average by the inverse of the proportion of the total instructions that category composes. Results from this addition can be seen in figure \ref{average_weight}. We see similar patterns than in the original averages, with the clear distintion in applications like nab or wrf where their previous most critical categories ballon in "criticality". This tells us that there are applications where a small subset of instructions account for a substantial amount of the possible errors. 
+
+\begin{figure}[!t] 
+    \centering
+    \includegraphics[width=8cm]{plots/average_arithmetic/benchmarks_grouped_by_category_weighted.pdf}
+\caption{Average amount of faults that resulted in an SDC per category, weigted by the category's portion of total instructions.}
+\label{average_weight}
+\end{figure}
+
+
+
+
+
+%en conclusiones no olvidarte de mencionar que las areas 'Super criticas' se encuentran en los programas mas sensibles en gneral, nab y wrf
 \bibliographystyle{IEEEtran}
 \bibliography{citations}
 
