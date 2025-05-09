@@ -110,7 +110,7 @@ Figure \ref{totals} shows us the general results from the first campaign. When l
     \subfloat[namd]{\includegraphics[width=45mm]{plots/stacked_distribution/namd_r_stacked_distribution.pdf}}
     \hspace{0mm}
     \subfloat[wrf]{\includegraphics[width=45mm]{plots/stacked_distribution/wrf_r_stacked_distribution.pdf}}
-\caption{Normalized counts of observed behavior after flipping each respective bit.}
+\caption{Stacked SDC, Crash and No Issues counts of the resulting behavior after fault injection in each bit. For each instruction, all four bits were flipped in different executions and the result of that injection was logged. Counts are normalized over the total floating point instructions instrumented inside the main executable of each benchmark, with a maximum of 1500.}
 \label{perbits}
 \end{figure}
 
@@ -125,7 +125,7 @@ Looking further into the data we can separate the observed results groups given 
     %     \hspace{0mm}
     \subfloat[wrf]{\includegraphics[width=.49\textwidth]{plots/arithmetic/wrf_r_arithmetic_type.pdf}}
     \subfloat[lbm]{\includegraphics[width=.49\textwidth]{plots/arithmetic/lbm_r_arithmetic_type.pdf}}
-\caption{Normalized counts of observed behavior after flipping each respective bit.}
+\caption{SDC, Crash and No Issues counts of the resulting behavior after fault injection grouped by each arithmetic instruction type. For each instruction, four bits were flipped in different executions and the result of that injection was logged. Counts are normalized over the total instructions of each arithmetic type that were instrumented. Instructions instrumented were the first 1500 of the main executable of each benchmark.}
 \label{categories}
 \end{figure*}
 Not only are there differences in the general amount of SDCs, but also we see differences in the distribution of SDCs. Nab has a fairly even distribution between its categories, having a slightly higher sensitivity in DIV instruction. Lbm on the other hand has almost all its SDC coming only from ADD instructions. Already we see a very rough possible candidate for a critical subsection to focus on protection, ADD uinstructions inside lbm, accounting for almost all relevant faults.\\
@@ -136,7 +136,7 @@ We now show the results obtained in the second injection campaign, as discussed 
 \begin{figure}[!t] 
     \centering
     \includegraphics[width=8cm]{plots/sdc_percentage_by_bit.pdf}
-\caption{Percentage of runs that resulted in SDC per bit flip, from a subset of SPEC applications.}
+\caption{Percentage of runs that resulted in SDC per bit flip, plotted for different benchmarks. Plots are shown for a subset of the total benchsuite instrumented that represent an example of all distinct patterns observed. Percentages are from the total floating point instructions in the main executable of each benchmark, up to a maximum of 2000.}
 \label{general}
 \end{figure}
 From figure~\ref{general} we can see a much more detailed view of the data shown in figure \ref{perbits}. To start, we see much more clearly the difference in patterns intrinsic to each program. By adding more granularity in the bits instrumented we observe how the sensitivity of each program not only varies in intensity, but also in bit ranges. Wrf has a level of sensitivity in its least relevant bits that now other program experiences. Furthermore, all programs increase their amount of SDCs as the significance of the bits, which tracks with what would be expected, but wrf and namd, show clear peaks in the middle bits. \\
@@ -150,11 +150,11 @@ As we did beforehand, we can separate the SDC rates insde each benchmark by the 
     \subfloat[roms]{\includegraphics[width=40mm]{plots/percentages_arithmetic/roms_r_sdc_arithmetic.pdf}}
     \hspace{0mm}
     \subfloat[namd]{\includegraphics[width=40mm]{plots/percentages_arithmetic/namd_r_sdc_arithmetic.pdf}}
-\caption{Percentages }
+\caption{Percentages of runs that resulted in SDC per bit flip, plotted by arithmetic instruction type within each benchmark. Plots are shown for a subset of the total benchsuite instrumented that represent an example of all distinct patterns observed. Percentages are from the total floating point instructions of each arithmetic type present in the instrumented instructions in the main executable of each benchmark.}
 \label{percategoryfull}
 \end{figure}
 By increasing the number of samples taken we can more clearly see the difference in patterns between categories inside each application. Figure \ref{percategoryfull} provides insight into the this variying behaviors. Of special interest we would like to note nab and lbm, where a clear categories experiences higher sensitivities than all others over the course of the entire range of bits. Meanwhie, namd has three distinct ranges where a different category is most sensitive. Across the least significant bits, ADD instructions are the most sensitive; then there is a peak from SUB instructions around the bit 32; and finally at the tail end of bits MUL instructions account for most SDCs.\\
-While the the graphs helps us visualize the fact that diferent patterns exist they do not provide a clear and direct comparison between both categories within a benchmark and the benchmarks themselves. Therefore, in figure \ref{average} we plot the average values of each category. This averages were calculated assuming uniformity in the distrbution of faults throught the bits of an operation. These averages are the expected value of the amount of faults that would result in an error if said faults occur in an instruction of a category.
+While the the graphs helps us visualize the fact that different patterns exist they do not provide a clear and direct comparison between both categories within a benchmark and the benchmarks themselves. Therefore, in figure \ref{average} we plot the average values of each category. This averages were calculated assuming uniformity in the distribution of faults through the bits of an operation. These averages are the expected value of the amount of faults that would result in an error if said faults occur in an instruction of a category.
 \begin{figure}[!t] 
     \centering
     \includegraphics[width=8cm]{plots/average_arithmetic/benchmarks_grouped_by_category.pdf}
@@ -162,8 +162,7 @@ While the the graphs helps us visualize the fact that diferent patterns exist th
 \label{average}
 \end{figure}
 This plot paints a clear picture of every finding discussed at this point and this average vaue could be considered a possible candidate for a sort of "Criticality metric" that would allow a user to fine tune their protection strategy. Still, we need to consider that the original goal was to find a critical subset if instructions with the specific purpose of reducing the number of instructions protected. This plot shows the general sensitivity of every category but its says nothing about the cost of choosing one of the categories. As an example, if we only look in figure \ref{average} at lbm, the ADD instructions could be considered for exclusive protection. What the plot does not show is that ADD instructions in lbm account for 90\% of the total instructions instrumented, so the strategy would not deviate much from one which protects all instructions. \\
-To account for the possible cost of protecting each category we proposed the very simple inclusion of weighing each average by the inverse of the proportion of the total instructions that category composes. Results from this addition can be seen in figure \ref{average_weight}. We see similar patterns than in the original averages, with the clear distintion in applications like nab or wrf where their previous most critical categories ballon in "criticality". This tells us that there are applications where a small subset of instructions account for a substantial amount of the possible errors. 
-
+To account for the possible cost of protecting each category we proposed the very simple inclusion of weighing each average by the inverse of the proportion of the total instructions that category composes. Results from this addition can be seen in figure \ref{average_weight}. We see similar patterns than in the original averages, with the clear distinction in applications like nab or wrf where their previous most critical categories ballon in "criticality". This tells us that there are applications where a small subset of instructions account for a substantial amount of the possible errors. 
 \begin{figure}[!t] 
     \centering
     \includegraphics[width=8cm]{plots/average_arithmetic/benchmarks_grouped_by_category_weighted.pdf}

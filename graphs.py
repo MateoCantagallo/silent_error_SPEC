@@ -38,7 +38,7 @@ def plot_sdc_percentage_by_bit(df, benchmarks):
 
         bit_groups = benchmark_df.groupby("bit")
         bit_percentages = {
-            bit: len(group[group["result"] == "SDC"]) / len(group)
+            bit: (len(group[group["result"] == "SDC"]) / len(group))*100
             for bit, group in bit_groups
         }
 
@@ -51,7 +51,7 @@ def plot_sdc_percentage_by_bit(df, benchmarks):
     plt.legend()
     plt.grid(True, linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/sdc_percentage_by_bit.pdf")
+    plt.savefig("plots/sdc_percentage_by_bit.pdf",bbox_inches='tight')
     plt.close()
 def plot_sdc_percentage_by_arithmetic_type_per_bit(df, benchmark, output_dir="plots"):
     os.makedirs("plots/percentages_arithmetic", exist_ok=True)
@@ -82,7 +82,7 @@ def plot_sdc_percentage_by_arithmetic_type_per_bit(df, benchmark, output_dir="pl
     plt.legend()
     plt.grid(True, linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(f"plots/percentages_arithmetic/{benchmark}_sdc_arithmetic.pdf")
+    plt.savefig(f"plots/percentages_arithmetic/{benchmark}_sdc_arithmetic.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -114,7 +114,7 @@ def plot_sdc_percentage_by_simd_type_per_bit(df, benchmark):
     plt.legend()
     plt.grid(True, linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(f"plots/percentages_simd/{benchmark}_sdc_simd.pdf")
+    plt.savefig(f"plots/percentages_simd/{benchmark}_sdc_simd.pdf",bbox_inches='tight')
     plt.close()
 
 def plot_avg_sdc_percentage_per_arithmetic(df, benchmark):
@@ -153,7 +153,7 @@ def plot_avg_sdc_percentage_per_arithmetic(df, benchmark):
     plt.ylabel("Average SDC Percent")
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(f"plots/average_arithmetic/{benchmark}_avg_sdc_arithmetic.pdf")
+    plt.savefig(f"plots/average_arithmetic/{benchmark}_avg_sdc_arithmetic.pdf",bbox_inches='tight')
     plt.close()
 
 def plot_avg_sdc_percentage_per_simd(df, benchmark):
@@ -192,7 +192,7 @@ def plot_avg_sdc_percentage_per_simd(df, benchmark):
     plt.ylabel("Average SDC Percentage")
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(f"plots/average_simd/{benchmark}_avg_sdc_simd.pdf")
+    plt.savefig(f"plots/average_simd/{benchmark}_avg_sdc_simd.pdf",bbox_inches='tight')
     plt.close()
 
 def plot_avg_sdc_percentage_per_arithmetic_all(df, benchmarks):
@@ -230,7 +230,7 @@ def plot_avg_sdc_percentage_per_arithmetic_all(df, benchmarks):
     plt.legend()
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/average_arithmetic/all_benchmarks_avg_sdc_arithmetic.pdf")
+    plt.savefig("plots/average_arithmetic/all_benchmarks_avg_sdc_arithmetic.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -269,7 +269,7 @@ def plot_avg_sdc_percentage_per_simd_all(df, benchmarks):
     plt.legend()
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/average_simd/all_benchmarks_avg_sdc_simd.pdf")
+    plt.savefig("plots/average_simd/all_benchmarks_avg_sdc_simd.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -308,7 +308,7 @@ def plot_avg_sdc_per_category_by_benchmark(df, benchmarks):
     plt.legend(title="Arithmetic Type")
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/average_arithmetic/benchmarks_grouped_by_category.pdf")
+    plt.savefig("plots/average_arithmetic/benchmarks_grouped_by_category.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -347,7 +347,7 @@ def plot_avg_sdc_per_simd_by_benchmark(df, benchmarks):
     plt.legend(title="SIMD Type")
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/average_simd/benchmarks_grouped_by_simd.pdf")
+    plt.savefig("plots/average_simd/benchmarks_grouped_by_simd.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -387,7 +387,7 @@ def plot_avg_sdc_per_category_by_benchmark_weight(df, benchmarks):
     plt.legend(title="Arithmetic Type")
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/average_arithmetic/benchmarks_grouped_by_category_weighted.pdf")
+    plt.savefig("plots/average_arithmetic/benchmarks_grouped_by_category_weighted.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -427,7 +427,7 @@ def plot_avg_sdc_per_simd_by_benchmark_weight(df, benchmarks):
     plt.legend(title="SIMD Type")
     plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig("plots/average_simd/benchmarks_grouped_by_simd_weighted.pdf")
+    plt.savefig("plots/average_simd/benchmarks_grouped_by_simd_weighted.pdf",bbox_inches='tight')
     plt.close()
 
 
@@ -446,7 +446,7 @@ def plot_general_summary(df, output_folder="plots/general_view", colors=None):
     plt.ylabel("Total Count")
     plt.grid(axis="y", linestyle="--", linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "general_summary.pdf"))
+    plt.savefig(os.path.join(output_folder, "general_summary.pdf"),bbox_inches='tight')
     plt.close()
 
 def plot_normalized_result_distribution_by_category(df, benchmarks, category_col, folder_name, colors):
@@ -468,7 +468,7 @@ def plot_normalized_result_distribution_by_category(df, benchmarks, category_col
         plt.xticks(rotation=45)
         plt.legend(title="Result")
         plt.tight_layout()
-        plt.savefig(os.path.join(output_folder, f"{benchmark}_{category_col}.pdf"))
+        plt.savefig(os.path.join(output_folder, f"{benchmark}_{category_col}.pdf"),bbox_inches='tight')
         plt.close()
 
 
@@ -510,7 +510,7 @@ def plot_stacked_sdc_distribution_by_benchmark(df, benchmarks, colors=None):
         plt.legend(title="Result Type")
         plt.tight_layout()
         plt.grid(True, axis="y", linestyle="--", linewidth=0.5)
-        plt.savefig(f"plots/stacked_distribution/{benchmark}_stacked_distribution.pdf")
+        plt.savefig(f"plots/stacked_distribution/{benchmark}_stacked_distribution.pdf",bbox_inches='tight')
         plt.close()
 
 def main():
