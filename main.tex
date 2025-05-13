@@ -59,19 +59,22 @@ In this paper we conducted an extensive injection campaign to all applications f
 
 
 \section{Motivation}
-As previously mentioned, we aim to focus on SDCs. Following this decision we furthered focus on faults that appear in the Floating Point functional units. 
-FP instructions are crucial in high precision scientific applications, consisting of the bulk of operations that calculate the relevant results. Furthermore, FP instructions are not used for pointer manipulation or control flow instructions, so it is highly unlikely that an error in this unit results in a crash rather than an SDC (We later confirmed this by observing no segmentation faults in any of our experiments).
-Another motivating factor for this focus on FP instructions is that the high complexity and area of FP units means that there is a further cost in either replicating the units or replicating the instructions, so any strides in reducing the amount of FP instructions that need to be protected would save substantial performance cost.
-We chose to perform our campaign over SPEC as it is consider one of the main standards within the HPC community and the applications provided by it give a varied selection of different program domains.\\
+We have seen previous work like (CITA OSMAN) where several protection strategies are proposed. These methods, and most others in the literature, talk about protection at the architectural level. Still, the disscussions tend to revolve around the components or instructions that were able to be protected as a whole by the proposed methods. We propose that focusing on a reduced set of instructions to protect, rather than the blanket approach most commonly used, may be a promising way foward in combating the growing neccessity for fault protection in HPC systems.\\
+As a first step we would need to find evidence that a subset of instructions is more likely to convert a fault during its executio into an error, and also that this subset is possibe to identify and categorize this set in a feassible manner for each application. With this, there would be justification for future work in fine tuning fault protection strategies based on applications, and greatly reducing the cost of fault tolerance.\\
 We conducted our injection campaign with the goal of answering these three main questions:
 \begin{itemize}
     \item Is there evidence that a "critical" subset of instructions that are significantly more sensitive to bit flips than others, and is this subset a minority?
     \item Do these critical instructions share visible characteristics that can be observed at the architectural level?
     \item Do these subsets vary depending on the application or type of application?
 \end{itemize}
+As previously mentioned, we aim to focus on SDCs. Following this decision we furthered focus on faults that appear in the Floating Point functional units. 
+FP instructions are crucial in high precision scientific applications, consisting of the bulk of operations that calculate the relevant results. Furthermore, FP instructions are not used for pointer manipulation or control flow instructions, so it is highly unlikely that an error in this unit results in a crash rather than an SDC (We later confirmed this by observing no segmentation faults in any of our experiments).
+Another motivating factor for this focus on FP instructions is that the high complexity and area of FP units means that there is a further cost in either replicating the units or replicating the instructions, so any strides in reducing the amount of FP instructions that need to be protected would save substantial performance cost.
+We chose to perform our campaign over SPEC as it is consider one of the main standards within the HPC community and the applications provided by it give a varied selection of different program domains.\\
+
 
 \section{Methodology}
-Since our goal is to reach a conclusion in regards to the instructions that should or should not be replicated, we decided to conduct our fault injection at the architectural level using intel PIN tool.\cite{luk2005pin}. PIN is an instrumentation tool developed by intel for x86 architecture CPUs that allows for runtime instrumentation of programs. Similar approaches have been previously used for fault injection.\cite{wei2014quantifying}\\
+Many injection campaigns focus on simulating real hardware faults at the microarchitecture level \cite{cho2013quantitative, olian2011modeling}. Since our goal is to reach a conclusion in regards to the instructions that should or should not be replicated, we decided to conduct our fault injection at the architectural level using intel PIN tool.\cite{luk2005pin}. PIN is an instrumentation tool developed by intel for x86 architecture CPUs that allows for runtime instrumentation of programs. Similar approaches have been previously used for fault injection.\cite{wei2014quantifying}\\
 Injecting faults at the instruction level may introduce a degree of inaccuracy in comparison with actual real life faults that can manifest at any point of the microarchitecture, as discussed in \cite{cho2013quantitative}. For our purposes we do not believe that these inaccuracies are relevant because our work focuses solely on how faults in specific instructions affect program output, so faults that would not have affected any instructions are of no interest. Furthermore, instrumentation with PIN provides a relatively fast injection metholodogy, allowing for a substantial number of faults to be placed in each program.\\
 Our tool works by:
 \begin{itemize}
@@ -162,7 +165,7 @@ While the the graphs helps us visualize the fact that different patterns exist t
 \label{average}
 \end{figure}
 This plot paints a clear picture of every finding discussed at this point and this average vaue could be considered a possible candidate for a sort of "Criticality metric" that would allow a user to fine tune their protection strategy. Still, we need to consider that the original goal was to find a critical subset if instructions with the specific purpose of reducing the number of instructions protected. This plot shows the general sensitivity of every category but its says nothing about the cost of choosing one of the categories. As an example, if we only look in figure \ref{average} at lbm, the ADD instructions could be considered for exclusive protection. What the plot does not show is that ADD instructions in lbm account for 90\% of the total instructions instrumented, so the strategy would not deviate much from one which protects all instructions. \\
-To account for the possible cost of protecting each category we proposed the very simple inclusion of weighing each average by the inverse of the proportion of the total instructions that category composes. Results from this addition can be seen in figure \ref{average_weight}. We see similar patterns than in the original averages, with the clear distinction in applications like nab or wrf where their previous most critical categories ballon in "criticality". This tells us that there are applications where a small subset of instructions account for a substantial amount of the possible errors. 
+To account for the possible cost of protecting each category we proposed the very simple inclusion of weighing each average by the inverse of the proportion of the total instructions that category composes. Results from this new metric can be seen in figure \ref{average_weight}. We see similar patterns than in the original averages, with the clear distinction in applications like nab or wrf where their previous most critical categories balloon in "criticality". This tells us that there are applications where a small subset of instructions account for a substantial amount of the possible errors. The fact that this increase in criticallity is shown most substantially in the most sensitive applications (nab and wrf) is a promising result.
 \begin{figure}[!t] 
     \centering
     \includegraphics[width=8cm]{plots/average_arithmetic/benchmarks_grouped_by_category_weighted.pdf}
@@ -170,9 +173,15 @@ To account for the possible cost of protecting each category we proposed the ver
 \label{average_weight}
 \end{figure}
 
+\section{Future Work}
+- Mention that our category choice was just one of the possibillities, so other categories can be tested.
+- Mention that even in the most sensitive categories, many runs still don't experience errors. So maybe further granularity inside the categories is justified.
+- A dynamic approach coud be tested, where instructions are tagged as critical on the fly based on program context
 
 
-
+\section{Conclusions}
+We presented an architectural level fault injection campaign focused on the FP instructions of HPC applications. From the results of this campaign we provided evidence for the feassibiblity of a more granular approach to fault pratection, aiming at reducing the total cost of having a good enough protection strategy.\\
+Our results showed that even taking a very direct and naive categorization policy (Arithmetic type), a clear critical area emerges in comparison to others. Furthermore, this critical area manifests in most cases as the category with the least ammount of total instructions, showing that if identified there could be benefits in focusing protection only on those instructions.
 
 %en conclusiones no olvidarte de mencionar que las areas 'Super criticas' se encuentran en los programas mas sensibles en gneral, nab y wrf
 \bibliographystyle{IEEEtran}
